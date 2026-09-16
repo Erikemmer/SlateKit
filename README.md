@@ -63,6 +63,23 @@ window has to be key (a prominent button is only yellow while it is), and it
 has to sit at the same position on screen, because the title bar and the
 rounded text fields are translucent and blur the desktop behind them.
 
+Two more screens the first pass did not cover — Compare (two images side by
+side) and the Sort & Export sheet — were checked the same way, against
+Selector `cb29de7` (the last commit before this package existed): **0 of
+4 786 176 pixels differ**, for both. One extra thing had to be held still here
+that the first four screens never touched: real photo thumbnails in the
+filmstrip load progressively, so the very first attempt (before either build's
+thumbnails had settled) flagged 94 441 pixels in exactly that strip and
+nowhere else; a few seconds' wait before the screenshot made the difference
+vanish. The window-position/key-window fix still came from a low-level
+activation step this round used that the original four-screen pass didn't
+need: launching two instances of the *same* bundle identifier (the running
+Xcode debug build and a fresh test instance) confused `System Events`' name-
+based process targeting badly enough that keystrokes went to the wrong
+window once. `NSRunningApplication(processIdentifier:).activate(...)`,
+verified against `NSWorkspace.frontmostApplication` before every keystroke,
+fixed it for good.
+
 ## Working on it
 
 ```bash

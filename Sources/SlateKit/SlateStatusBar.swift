@@ -32,7 +32,10 @@ public struct SlateStatusBar: View {
 }
 
 /// A one-line banner over the content, for something that went wrong and the
-/// user can do nothing about right now.
+/// user can do nothing about right now. Text is always black: the default
+/// `.primary` colour (white, in this app's forced dark scheme) failed WCAG AA
+/// against every one of the three tints once composited over content — as
+/// low as 1.9:1 on `accent` — while black clears 4.5:1 on all three.
 public struct SlateBanner: View {
     private let message: String
     private let tint: Color
@@ -45,6 +48,7 @@ public struct SlateBanner: View {
     public var body: some View {
         Text(message)
             .font(.callout)
+            .foregroundStyle(.black)
             .padding(10)
             .background(tint.opacity(0.9), in: RoundedRectangle(cornerRadius: Slate.cornerRadius))
             .padding(.top, 8)

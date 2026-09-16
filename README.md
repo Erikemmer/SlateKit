@@ -83,10 +83,21 @@ fixed it for good.
 ## Working on it
 
 ```bash
-make test     # unit tests
-make lint     # swift-format, strict
-make format   # reformat in place
+make test      # unit tests
+make lint      # swift-format, strict
+make format    # reformat in place
+make contrast  # every text/background pair against WCAG AA
 ```
+
+`make contrast` reads the palette straight out of `SlateTheme.swift` — it
+cannot go stale the way a hand-copied table would — and checks every pair
+either app actually draws: text on each panel background, the primary
+button's black-on-accent fill, the banner's fill, the active sidebar row's
+tint, and the five label swatches as non-text graphical dots (WCAG 1.4.11,
+3:1, not the 4.5:1 text needs). It found three real failures at `0.1.0` —
+`deny` at 4.0:1 on `panelBackground`, the banner's white text as low as
+1.9:1 on `accent`, and the active sidebar row's count text at 3.2:1 — fixed
+in `0.1.1`.
 
 Only the arithmetic is unit-tested — chip wrapping and the shortcut sheet's
 column split. The rest is declarative SwiftUI, which a unit test cannot judge;

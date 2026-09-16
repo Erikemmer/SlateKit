@@ -8,10 +8,13 @@
 # folder avoids it. Override with `make test SCRATCH=.build`.
 SCRATCH ?= $(HOME)/Library/Caches/SlateKit/build
 
-.PHONY: help test build lint format clean
+.PHONY: help test build lint format contrast clean
 
 test: ## Run the unit tests
 	swift test --scratch-path $(SCRATCH)
+
+contrast: ## Check every text/background pair against WCAG AA (needs python3)
+	python3 Scripts/check-contrast.py
 
 build: ## Build the package
 	swift build --scratch-path $(SCRATCH)

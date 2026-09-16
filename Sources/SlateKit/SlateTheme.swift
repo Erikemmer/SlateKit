@@ -30,8 +30,11 @@ public enum Slate {
 
     /// "Yes, keep it." Also the colour of a finished, successful thing.
     public static let affirm = Color(red: 0.30, green: 0.85, blue: 0.40)
-    /// "No." Also failures and warnings that need an answer.
-    public static let deny = Color(red: 0.95, green: 0.30, blue: 0.30)
+    /// "No." Also failures and warnings that need an answer. Lighter than a
+    /// plain alert red on purpose: at (0.95, 0.30, 0.30) it read at 4.0:1 as
+    /// text on `panelBackground` — under WCAG AA's 4.5:1 for normal text,
+    /// found by `Scripts/check-contrast.py`.
+    public static let deny = Color(red: 0.95, green: 0.40, blue: 0.40)
 
     // MARK: Metrics
 

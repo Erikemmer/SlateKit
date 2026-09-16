@@ -73,7 +73,11 @@ public struct SlateSidebarRow<Title: View>: View {
             if let count {
                 Text("\(count)")
                     .monospacedDigit()
-                    .foregroundStyle(Slate.textSecondary)
+                    // textSecondary on the plain background clears WCAG AA, but
+                    // dims to 3.2:1 against the active row's accent tint — the
+                    // same isActive/isSelected switch SlateGridCell already
+                    // uses for its own caption text.
+                    .foregroundStyle(isActive ? Slate.textPrimary : Slate.textSecondary)
             }
         }
         .font(.callout)

@@ -52,7 +52,16 @@ That is the whole test: *could the other app use this unchanged?*
 
 ![Session with sidebar, inspector and overlay panel](Docs/session.png)
 
-Both are Selector, built against this package.
+![The shortcut sheet](Docs/shortcuts.png)
+
+All three are Selector, built against this package.
+
+Moving those components out of the app changed **not one pixel**: the same four
+screens, photographed before and after with the same script, differ in zero of
+3.3 million pixels. Two things had to be held still for that to be true — the
+window has to be key (a prominent button is only yellow while it is), and it
+has to sit at the same position on screen, because the title bar and the
+rounded text fields are translucent and blur the desktop behind them.
 
 ## Working on it
 

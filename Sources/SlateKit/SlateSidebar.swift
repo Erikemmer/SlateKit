@@ -28,7 +28,7 @@ public struct SlateSidebarSection: View {
 ///
 /// No width of its own – the column decides how wide it is, so the same row
 /// works in a 200 pt sidebar and a 320 pt one.
-public struct SlateSidebarRow<Title: View>: View {
+public struct SlateSidebarRow<Title: View, Accessory: View>: View {
     private let icon: String
     private let count: Int?
     private let tint: Color
@@ -36,12 +36,16 @@ public struct SlateSidebarRow<Title: View>: View {
     private let help: String
     private let topPadding: CGFloat
     private let title: Title
+    private let accessory: Accessory
     private let action: ((_ isCommandHeld: Bool) -> Void)?
     @FocusState private var isFocused: Bool
 
     /// - Parameters:
     ///   - tint: colour of the icon; the label colours use this.
     ///   - isActive: draws the accent wash behind the row.
+    ///   - accessory: a trailing control (e.g. a delete button) after the
+    ///     count; supplies its own accessibility label since a row's own
+    ///     spoken value (title + count) says nothing about it.
     ///   - action: told whether ⌘ was held, so a list can offer "narrow down"
     ///     as well as "show this".
     public init(
@@ -52,6 +56,7 @@ public struct SlateSidebarRow<Title: View>: View {
         help: String = "",
         topPadding: CGFloat = 0,
         @ViewBuilder title: () -> Title,
+        @ViewBuilder accessory: () -> Accessory = { EmptyView() },
         action: ((_ isCommandHeld: Bool) -> Void)? = nil
     ) {
         self.icon = icon
@@ -61,29 +66,39 @@ public struct SlateSidebarRow<Title: View>: View {
         self.help = help
         self.topPadding = topPadding
         self.title = title()
+        self.accessory = accessory()
         self.action = action
     }
 
     public var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: icon)
-                .foregroundStyle(tint)
-                .frame(width: 14)
-                // Decorative: the title already says what this row is: VoiceOver
-                // reading the symbol's own name first ("flag, Picks, 3") would
-                // put the least useful word first.
-                .accessibilityHidden(true)
-            title
-            Spacer(minLength: 4)
-            if let count {
-                Text("\(count)")
-                    .monospacedDigit()
-                    // textSecondary on the plain background clears WCAG AA, but
-                    // dims to 3.2:1 against the active row's accent tint — the
-                    // same isActive/isSelected switch SlateGridCell already
-                    // uses for its own caption text.
-                    .foregroundStyle(isActive ? Slate.textPrimary : Slate.textSecondary)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(tint)
+                    .frame(width: 14)
+                    // Decorative: the title already says what this row is:
+                    // VoiceOver reading the symbol's own name first ("flag,
+                    // Picks, 3") would put the least useful word first.
+                    .accessibilityHidden(true)
+                title
+                Spacer(minLength: 4)
+                if let count {
+                    Text("\(count)")
+                        .monospacedDigit()
+                        // textSecondary on the plain background clears WCAG AA, but
+                        // dims to 3.2:1 against the active row's accent tint — the
+                        // same isActive/isSelected switch SlateGridCell already
+                        // uses for its own caption text.
+                        .foregroundStyle(isActive ? Slate.textPrimary : Slate.textSecondary)
+                }
             }
+            // Combines the title and count text into one spoken value, e.g.
+            // "Picks, 3" — scoped to exclude `accessory`, which must stay its
+            // own reachable element (a delete button folded into this would
+            // no longer be individually activatable by VoiceOver).
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(isActive ? .isSelected : [])
+            accessory
         }
         .font(.callout)
         .padding(.horizontal, 12)
@@ -109,9 +124,6 @@ public struct SlateSidebarRow<Title: View>: View {
             return .handled
         }
         .help(help)
-        // Combines the title and count text into one spoken value, e.g.
-        // "Picks, 3" — the icon is hidden above, so nothing speaks twice.
-        .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
@@ -142,11 +154,12 @@ extension SlateSidebarRow where Title == SlateSidebarTitle {
         help: String = "",
         topPadding: CGFloat = 0,
         titleColor: Color = Slate.textPrimary,
+        @ViewBuilder accessory: () -> Accessory = { EmptyView() },
         action: ((_ isCommandHeld: Bool) -> Void)? = nil
     ) {
         self.init(
             icon: icon, count: count, tint: tint, isActive: isActive, help: help, topPadding: topPadding,
-            title: { SlateSidebarTitle(title, color: titleColor) }, action: action)
+            title: { SlateSidebarTitle(title, color: titleColor) }, accessory: accessory, action: action)
     }
 }
 

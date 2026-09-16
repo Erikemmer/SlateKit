@@ -101,7 +101,13 @@ public struct SlateShortcutSheet: View {
             }
             .padding(14)
         }
-        .frame(width: 560, height: 480)
+        // Sized to what the table actually holds, not a number picked once and
+        // left behind: the window used to be a fixed 560×480 regardless of how
+        // many shortcuts the two columns held. `maxHeight` is a safety net, not
+        // a target — the inner ScrollView still scrolls if a future shortcut
+        // list ever grows past it; today's table fits well inside it.
+        .frame(minWidth: 480, idealWidth: 620, maxWidth: 760, maxHeight: 700)
+        .fixedSize(horizontal: false, vertical: true)
         .background(Slate.windowBackground)
     }
 

@@ -23,22 +23,34 @@ public struct SlateInspectorSection<Content: View>: View {
 
 /// A symbol and a value, for the rows of facts an inspector lists. Meant to sit
 /// inside a `Grid`, so the values of neighbouring rows line up.
+///
+/// `label` names what the fact *is* ("Camera", "Focal length") for VoiceOver
+/// only — the symbol is decorative on screen (the surrounding facts and the
+/// value's own shape usually say enough), and its own SF Symbol name would
+/// often say the wrong thing anyway: "circle.lefthalf.filled" reads as
+/// "circle left half filled", not "lens".
 public struct SlateFactRow: View {
     private let symbol: String
+    private let label: String
     private let value: String
 
-    public init(symbol: String, value: String) {
+    public init(symbol: String, label: String, value: String) {
         self.symbol = symbol
+        self.label = label
         self.value = value
     }
 
     public var body: some View {
         GridRow {
             Image(systemName: symbol).foregroundStyle(Slate.textSecondary).frame(width: 18)
+                .accessibilityHidden(true)
             Text(value).foregroundStyle(Slate.textPrimary).textSelection(.enabled)
                 .gridColumnAlignment(.leading)
         }
         .font(.callout)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
     }
 }
 
@@ -59,6 +71,9 @@ public struct SlateValueRow: View {
             Text(value).foregroundStyle(Slate.textSecondary)
         }
         .font(.callout)
+        // "report.jpg, 16 MB" rather than VoiceOver reading two unrelated
+        // texts back to back with no indication they belong together.
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -87,6 +102,9 @@ public struct SlateStarRating: View {
                         .foregroundStyle(star <= rating ? Slate.accent : Slate.textSecondary.opacity(0.6))
                 }
                 .buttonStyle(.plain)
+                // `.plain` opts a button out of the Tab order on macOS; without
+                // this a keyboard-only user cannot reach these stars at all.
+                .focusable()
                 .help("\(star) star\(star == 1 ? "" : "s") (\(star))")
             }
             Spacer()
@@ -116,7 +134,9 @@ public struct SlateChip: View {
             if let onRemove {
                 Button(action: onRemove) { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.plain)
+                    .focusable()
                     .help("Remove")
+                    .accessibilityLabel("Remove \(text)")
             }
         }
         .font(.caption)
@@ -140,6 +160,7 @@ public struct SlateSuggestionChip: View {
     public var body: some View {
         Button(text, action: action)
             .buttonStyle(.plain)
+            .focusable()
             .font(.caption)
             .padding(.horizontal, 7).padding(.vertical, 3)
             .background(Color.white.opacity(0.06), in: Capsule())

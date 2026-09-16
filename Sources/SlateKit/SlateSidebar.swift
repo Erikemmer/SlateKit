@@ -37,6 +37,7 @@ public struct SlateSidebarRow<Title: View>: View {
     private let topPadding: CGFloat
     private let title: Title
     private let action: ((_ isCommandHeld: Bool) -> Void)?
+    @FocusState private var isFocused: Bool
 
     /// - Parameters:
     ///   - tint: colour of the icon; the label colours use this.
@@ -68,6 +69,10 @@ public struct SlateSidebarRow<Title: View>: View {
             Image(systemName: icon)
                 .foregroundStyle(tint)
                 .frame(width: 14)
+                // Decorative: the title already says what this row is: VoiceOver
+                // reading the symbol's own name first ("flag, Picks, 3") would
+                // put the least useful word first.
+                .accessibilityHidden(true)
             title
             Spacer(minLength: 4)
             if let count {
@@ -86,9 +91,28 @@ public struct SlateSidebarRow<Title: View>: View {
         .padding(.top, topPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(isActive ? Slate.accent.opacity(0.18) : Color.clear)
+        .overlay {
+            // A plain custom view draws no focus ring of its own, unlike a
+            // real control – without this, a keyboard-only user could Tab
+            // onto a row and never see where they landed.
+            if isFocused {
+                RoundedRectangle(cornerRadius: Slate.cornerRadius).stroke(Slate.accent, lineWidth: 2)
+            }
+        }
         .contentShape(Rectangle())
         .onTapGesture { action?(NSEvent.modifierFlags.contains(.command)) }
+        .focusable(action != nil)
+        .focused($isFocused)
+        .onKeyPress(keys: [.return, .space]) { _ in
+            guard let action else { return .ignored }
+            action(NSEvent.modifierFlags.contains(.command))
+            return .handled
+        }
         .help(help)
+        // Combines the title and count text into one spoken value, e.g.
+        // "Picks, 3" — the icon is hidden above, so nothing speaks twice.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
 

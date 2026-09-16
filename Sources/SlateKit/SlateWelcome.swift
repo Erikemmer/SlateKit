@@ -207,6 +207,7 @@ public struct SlateRecentRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focusable()
         .opacity(isReachable ? 1 : 0.4)
         .help(help)
     }

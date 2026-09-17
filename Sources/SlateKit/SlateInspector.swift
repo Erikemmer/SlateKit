@@ -77,17 +77,39 @@ public struct SlateValueRow: View {
     }
 }
 
+/// What a star rating writes beside its stars.
+///
+/// An option rather than a change, because `SlateStarRating` has drawn the
+/// number since 0.1.0 and two apps bind this package by tag: a host still on an
+/// older pin must not find its rating row redrawn the day it raises that pin
+/// for something else. `.value` is what every version through 0.2.1 drew, so it
+/// is the default; `.unratedOnly` is 0.3.0's quieter reading, asked for.
+public enum SlateStarLabel: Sendable, Equatable {
+    /// `3/5` beside the stars, and `Unrated` at zero. The look through 0.2.1.
+    case value
+    /// Nothing beside the stars, except `Unrated` at zero – the one rating with
+    /// no picture of its own. Introduced in 0.3.0.
+    case unratedOnly
+}
+
 /// Five clickable stars and the value in words. Knows nothing but an `Int`, so
 /// any app can rate anything with it.
 public struct SlateStarRating: View {
     private let rating: Int
+    let label: SlateStarLabel
     private let onChange: (Int) -> Void
 
-    /// - Parameter onChange: called with the star that was clicked. What a
-    ///   click on the current rating means – clear it, or keep it – is the
-    ///   app's decision, not this control's.
-    public init(rating: Int, onChange: @escaping (Int) -> Void) {
+    /// - Parameters:
+    ///   - label: what is written beside the stars. Defaults to the reading
+    ///     this control has always had; see `SlateStarLabel`.
+    ///   - onChange: called with the star that was clicked. What a click on the
+    ///     current rating means – clear it, or keep it – is the app's decision,
+    ///     not this control's.
+    public init(
+        rating: Int, label: SlateStarLabel = .value, onChange: @escaping (Int) -> Void
+    ) {
         self.rating = rating
+        self.label = label
         self.onChange = onChange
     }
 
@@ -108,22 +130,31 @@ public struct SlateStarRating: View {
                 .help(Self.starHelp(star))
             }
             Spacer()
-            // Only when there is nothing to see. Five drawn stars already say
-            // "three of them are filled", and a "3/5" beside them is that same
-            // fact written a second time – the copy that makes a rating row
-            // read as a form field rather than as a picture. An *empty* rating
-            // is the one case with no picture of its own: five hollow stars
-            // mean "not rated" only to someone who has already learned that
-            // they do, so that case keeps its word.
-            if rating == 0 {
-                Text("Unrated")
-                    .font(.caption)
-                    .foregroundStyle(Slate.textSecondary)
+            if let text = Self.labelText(rating: rating, label: label) {
+                Text(text)
+                    .font(.caption).monospacedDigit().foregroundStyle(Slate.textSecondary)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Rating"))
         .accessibilityValue(Text("\(rating) of 5"))
+    }
+
+    /// What goes beside the stars, or `nil` for nothing at all.
+    ///
+    /// Pulled out of the body because it is the whole of what `SlateStarLabel`
+    /// decides, and a decision a test can read is worth more than one buried in
+    /// a `ViewBuilder` that no test can reach.
+    ///
+    /// `.unratedOnly` keeps the word at zero on purpose: five drawn stars say
+    /// "three are filled" perfectly well, but five *hollow* stars mean "not
+    /// rated" only to somebody who has already learned that they do.
+    static func labelText(rating: Int, label: SlateStarLabel) -> String? {
+        if rating == 0 { return "Unrated" }
+        switch label {
+        case .value: return "\(rating)/5"
+        case .unratedOnly: return nil
+        }
     }
 
     /// "1 star (1)" / "3 stars (3)" – the full word per count, since German's
@@ -135,21 +166,80 @@ public struct SlateStarRating: View {
     }
 }
 
+/// How a chip is filled.
+///
+/// An option rather than a change. `SlateChip` has been drawn in the accent
+/// since 0.1.0, and Selector draws its own tags with it; a host that raises its
+/// pin for an unrelated fix must not find its tag row recoloured on the way.
+/// `.accent` is therefore what the parameter defaults to, and `.neutral` is
+/// 0.3.0's reading, asked for.
+public enum SlateChipStyle: Sendable, Equatable {
+    /// `Slate.accent.opacity(0.22)`. The fill through 0.2.1.
+    case accent
+    /// The same neutral white lift a field takes under the pointer, so a chip
+    /// and a field read as the same material. The accent is this palette's one
+    /// loud colour and it means *selected* – the active sidebar row, the chosen
+    /// cell, a focused field's border. A tag is not a selection, and a column
+    /// of eight of them in the selection colour makes a window look as though
+    /// eight things were chosen. Introduced in 0.3.0.
+    case neutral
+
+    /// The capsule's fill. A function of the case rather than a stored colour,
+    /// so the decision can be read by a test without a window.
+    var fill: Color {
+        switch self {
+        case .accent: return Slate.accent.opacity(0.22)
+        case .neutral: return Color.white.opacity(0.10)
+        }
+    }
+}
+
+/// When a chip's ✕ is visible.
+public enum SlateChipRemoveButton: Sendable, Equatable {
+    /// Drawn whenever the chip can be removed at all. The behaviour through
+    /// 0.2.1, and the default.
+    case always
+    /// Faded in under the pointer, or when it takes keyboard focus. Faded and
+    /// not *added*: `if isHovered` would take the button out of the layout, and
+    /// a row of chips that each grow a few points as the pointer crosses them
+    /// re-flows *under* the pointer, moving the ✕ away from the click that is
+    /// coming. Opacity keeps the width fixed, keeps the button in the
+    /// accessibility tree, and keeps it clickable throughout, which is what
+    /// makes "hover then click" one movement instead of two.
+    /// Introduced in 0.3.0.
+    case onHover
+
+    /// The button's opacity, given what the pointer and the keyboard are doing.
+    func opacity(isHovered: Bool, isFocused: Bool) -> Double {
+        switch self {
+        case .always: return 1
+        case .onHover: return isHovered || isFocused ? 1 : 0
+        }
+    }
+}
+
 /// A removable chip, for keywords and anything else that comes in small named
 /// pieces.
-///
-/// **Grey, not accent.** The accent is this palette's one loud colour and it
-/// means *selected* – the active sidebar row, the chosen cell, the focused
-/// field's border. A tag is not a selection; it is a value the book happens to
-/// carry, and a column of eight of them in the selection colour makes the
-/// window look as though eight things were chosen. The chip is therefore the
-/// same neutral lift a field gets under the pointer.
 public struct SlateChip: View {
     private let text: String
+    let style: SlateChipStyle
+    let removeButton: SlateChipRemoveButton
     private let onRemove: (() -> Void)?
 
-    public init(_ text: String, onRemove: (() -> Void)? = nil) {
+    /// - Parameters:
+    ///   - style: how the capsule is filled. Defaults to the fill this chip has
+    ///     always had; see `SlateChipStyle`.
+    ///   - removeButton: when the ✕ is visible. Defaults to the behaviour this
+    ///     chip has always had; see `SlateChipRemoveButton`.
+    public init(
+        _ text: String,
+        style: SlateChipStyle = .accent,
+        removeButton: SlateChipRemoveButton = .always,
+        onRemove: (() -> Void)? = nil
+    ) {
         self.text = text
+        self.style = style
+        self.removeButton = removeButton
         self.onRemove = onRemove
     }
 
@@ -166,26 +256,15 @@ public struct SlateChip: View {
                     .focused($isRemoveFocused)
                     .help("Remove")
                     .accessibilityLabel("Remove \(text)")
-                    // Faded, not removed. `if isHovered` would take the button
-                    // out of the layout, and a row of chips that each grow a
-                    // few points as the pointer crosses them re-flows under the
-                    // pointer – the ✕ moves away from the click that is coming.
-                    // Opacity keeps the width fixed, keeps the button in the
-                    // accessibility tree, and keeps it clickable, which is what
-                    // makes "hover then click" one movement instead of two.
-                    .opacity(isHovered || isRemoveFocused ? 1 : 0)
+                    .opacity(removeButton.opacity(isHovered: isHovered, isFocused: isRemoveFocused))
             }
         }
         .font(.caption)
         .padding(.horizontal, 8).padding(.vertical, 3)
-        .background(Self.background, in: Capsule())
+        .background(style.fill, in: Capsule())
         .foregroundStyle(Slate.textPrimary)
         .onHover { isHovered = $0 }
     }
-
-    /// The same white lift a field takes under the pointer, so a chip and a
-    /// field read as the same material.
-    static let background = Color.white.opacity(0.10)
 }
 
 /// A chip that offers something rather than stating it – a suggestion to click.

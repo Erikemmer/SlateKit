@@ -202,6 +202,8 @@ public struct SlateTokenField: View {
     private let onRemove: (String) -> Void
     private let onDraftChange: (String) -> Void
     private let focusRequest: Int
+    let chipStyle: SlateChipStyle
+    let chipRemoveButton: SlateChipRemoveButton
 
     /// - Parameters:
     ///   - completions: what the *host* thinks the current draft could mean. It
@@ -218,12 +220,18 @@ public struct SlateTokenField: View {
     ///     because that is what the host did and SwiftUI passed it down to every
     ///     chip: each one claimed "⏎ adds, ⌫ removes the last one" in place of
     ///     its own "Remove science fiction". Found in the accessibility tree.
+    ///   - chipStyle, chipRemoveButton: handed straight to the chips below the
+    ///     field, and defaulting the way `SlateChip` itself does, so this
+    ///     control cannot quietly hold a different opinion about what a chip
+    ///     looks like from the one the host draws beside it.
     public init(
         tokens: [String],
         placeholder: String,
         completions: [String] = [],
         focusRequest: Int = 0,
         help: String = "",
+        chipStyle: SlateChipStyle = .accent,
+        chipRemoveButton: SlateChipRemoveButton = .always,
         onDraftChange: @escaping (String) -> Void = { _ in },
         onAdd: @escaping (String) -> Void,
         onRemove: @escaping (String) -> Void
@@ -233,6 +241,8 @@ public struct SlateTokenField: View {
         self.completions = completions
         self.focusRequest = focusRequest
         self.help = help
+        self.chipStyle = chipStyle
+        self.chipRemoveButton = chipRemoveButton
         self.onDraftChange = onDraftChange
         self.onAdd = onAdd
         self.onRemove = onRemove
@@ -254,7 +264,9 @@ public struct SlateTokenField: View {
             if !tokens.isEmpty {
                 SlateFlowLayout(spacing: 6) {
                     ForEach(tokens, id: \.self) { token in
-                        SlateChip(token) { onRemove(token) }
+                        SlateChip(token, style: chipStyle, removeButton: chipRemoveButton) {
+                            onRemove(token)
+                        }
                     }
                 }
             }

@@ -118,11 +118,16 @@ def main() -> int:
     rows.append(("textSecondary on inactive sidebar row's own background (count, row not active)",
                   contrast(colors["textSecondary"], backgrounds["panelBackground"]), AA_NORMAL))
 
-    # SlateChip: white at 10% over a panel, with textPrimary on it. The chip
-    # is grey rather than accent-tinted (the accent means "selected"), so its
-    # own contrast is the one thing that stops it disappearing into the panel.
+    # SlateChip, both fills. The chip is drawn accent-tinted by default and grey
+    # when a host asks for `.neutral`, and 0.3.1 made that a choice rather than a
+    # change precisely so both are in use at once: Selector draws the accent one,
+    # Shelf the grey one. Both are therefore checked — a pair that only one of
+    # two apps draws is still a pair somebody reads.
+    chip_accent_bg = composite(colors["accent"], backgrounds["panelBackground"], 0.22)
+    rows.append(("textPrimary on SlateChip .accent (accent@22% over panelBackground)",
+                  contrast(colors["textPrimary"], chip_accent_bg), AA_NORMAL))
     chip_bg = composite(white, backgrounds["panelBackground"], 0.10)
-    rows.append(("textPrimary on SlateChip (white@10% over panelBackground)",
+    rows.append(("textPrimary on SlateChip .neutral (white@10% over panelBackground)",
                   contrast(colors["textPrimary"], chip_bg), AA_NORMAL))
     # The capsule's own edge against the panel is 1.37:1 and is deliberately not
     # tested at WCAG 1.4.11's 3:1. That rule covers a boundary you need in order

@@ -142,10 +142,10 @@ struct SlateEditableText: View {
     @ViewBuilder
     private var field: some View {
         if isMultiline {
-            TextField(placeholder, text: $draft, axis: .vertical)
+            TextField(placeholder, text: $draft, prompt: SlatePrompt.text(placeholder), axis: .vertical)
                 .lineLimit(1...lineLimit)
         } else {
-            TextField(placeholder, text: $draft)
+            TextField(placeholder, text: $draft, prompt: SlatePrompt.text(placeholder))
                 .onSubmit { commit() }
         }
     }
@@ -262,7 +262,7 @@ public struct SlateTokenField: View {
     }
 
     private var entry: some View {
-        TextField(placeholder, text: $draft)
+        TextField(placeholder, text: $draft, prompt: SlatePrompt.text(placeholder))
             .textFieldStyle(.plain)
             .font(.caption)
             .foregroundStyle(Slate.textPrimary)
@@ -323,5 +323,24 @@ public struct SlateFieldNote: View {
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityAddTraits(.isStaticText)
+    }
+}
+
+/// What an empty field says about itself.
+///
+/// Its own type because a placeholder is not a value and must never be drawn
+/// like one. A field carries `Slate.textPrimary`, and SwiftUI hands that colour
+/// to the placeholder too unless it is told otherwise – so an empty inspector
+/// read as a column of books whose publisher was "Add publisher…". The prompt
+/// is therefore built here, once, in the colour a label wears.
+///
+/// The title still goes to `TextField` as its first argument even though the
+/// prompt is what gets drawn: that argument is what the accessibility tree uses
+/// as the field's name, and a field whose name is "" is a field VoiceOver
+/// cannot announce.
+enum SlatePrompt {
+    static func text(_ placeholder: String) -> Text? {
+        guard !placeholder.isEmpty else { return nil }
+        return Text(placeholder).foregroundStyle(Slate.textSecondary)
     }
 }

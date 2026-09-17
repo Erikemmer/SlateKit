@@ -17,6 +17,9 @@ let package = Package(
         .target(
             name: "SlateKit",
             path: "Sources/SlateKit",
+            // The nine strings this package draws itself. Every other piece of
+            // text it shows is a parameter and belongs to the host.
+            resources: [.process("Resources")],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(

@@ -136,8 +136,8 @@ public struct SlateStarRating: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Rating"))
-        .accessibilityValue(Text("\(rating) of 5"))
+        .accessibilityLabel(Text(String(localized: "Rating", bundle: .module)))
+        .accessibilityValue(Text(String(localized: "\(rating) of 5", bundle: .module)))
     }
 
     /// What goes beside the stars, or `nil` for nothing at all.
@@ -150,9 +150,9 @@ public struct SlateStarRating: View {
     /// "three are filled" perfectly well, but five *hollow* stars mean "not
     /// rated" only to somebody who has already learned that they do.
     static func labelText(rating: Int, label: SlateStarLabel) -> String? {
-        if rating == 0 { return "Unrated" }
+        if rating == 0 { return String(localized: "Unrated", bundle: .module) }
         switch label {
-        case .value: return "\(rating)/5"
+        case .value: return String(localized: "\(rating)/5", bundle: .module)
         case .unratedOnly: return nil
         }
     }
@@ -161,8 +161,8 @@ public struct SlateStarRating: View {
     /// plural of "Stern" ("Sterne") is not the singular plus an appended "s".
     private static func starHelp(_ star: Int) -> String {
         star == 1
-            ? "1 star (1)"
-            : "\(star) stars (\(star))"
+            ? String(localized: "1 star (1)", bundle: .module)
+            : String(localized: "\(star) stars (\(star))", bundle: .module)
     }
 }
 
@@ -254,8 +254,8 @@ public struct SlateChip: View {
                     .buttonStyle(.plain)
                     .focusable()
                     .focused($isRemoveFocused)
-                    .help("Remove")
-                    .accessibilityLabel("Remove \(text)")
+                    .help(String(localized: "Remove", bundle: .module))
+                    .accessibilityLabel(String(localized: "Remove \(text)", bundle: .module))
                     .opacity(removeButton.opacity(isHovered: isHovered, isFocused: isRemoveFocused))
             }
         }

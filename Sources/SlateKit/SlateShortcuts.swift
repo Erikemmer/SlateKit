@@ -112,7 +112,8 @@ public struct SlateShortcutSheet: View {
             Divider()
             HStack {
                 Spacer()
-                Button("Close", action: onClose).keyboardShortcut(.cancelAction)
+                Button(String(localized: "Close", bundle: .module), action: onClose)
+                    .keyboardShortcut(.cancelAction)
             }
             .padding(14)
         }

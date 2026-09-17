@@ -137,6 +137,13 @@ public struct SlateStarRating: View {
 
 /// A removable chip, for keywords and anything else that comes in small named
 /// pieces.
+///
+/// **Grey, not accent.** The accent is this palette's one loud colour and it
+/// means *selected* – the active sidebar row, the chosen cell, the focused
+/// field's border. A tag is not a selection; it is a value the book happens to
+/// carry, and a column of eight of them in the selection colour makes the
+/// window look as though eight things were chosen. The chip is therefore the
+/// same neutral lift a field gets under the pointer.
 public struct SlateChip: View {
     private let text: String
     private let onRemove: (() -> Void)?
@@ -146,6 +153,9 @@ public struct SlateChip: View {
         self.onRemove = onRemove
     }
 
+    @State private var isHovered = false
+    @FocusState private var isRemoveFocused: Bool
+
     public var body: some View {
         HStack(spacing: 4) {
             Text(text)
@@ -153,15 +163,29 @@ public struct SlateChip: View {
                 Button(action: onRemove) { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.plain)
                     .focusable()
+                    .focused($isRemoveFocused)
                     .help("Remove")
                     .accessibilityLabel("Remove \(text)")
+                    // Faded, not removed. `if isHovered` would take the button
+                    // out of the layout, and a row of chips that each grow a
+                    // few points as the pointer crosses them re-flows under the
+                    // pointer – the ✕ moves away from the click that is coming.
+                    // Opacity keeps the width fixed, keeps the button in the
+                    // accessibility tree, and keeps it clickable, which is what
+                    // makes "hover then click" one movement instead of two.
+                    .opacity(isHovered || isRemoveFocused ? 1 : 0)
             }
         }
         .font(.caption)
         .padding(.horizontal, 8).padding(.vertical, 3)
-        .background(Slate.accent.opacity(0.22), in: Capsule())
+        .background(Self.background, in: Capsule())
         .foregroundStyle(Slate.textPrimary)
+        .onHover { isHovered = $0 }
     }
+
+    /// The same white lift a field takes under the pointer, so a chip and a
+    /// field read as the same material.
+    static let background = Color.white.opacity(0.10)
 }
 
 /// A chip that offers something rather than stating it – a suggestion to click.

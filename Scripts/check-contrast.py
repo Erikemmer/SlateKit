@@ -118,6 +118,20 @@ def main() -> int:
     rows.append(("textSecondary on inactive sidebar row's own background (count, row not active)",
                   contrast(colors["textSecondary"], backgrounds["panelBackground"]), AA_NORMAL))
 
+    # SlateChip: white at 10% over a panel, with textPrimary on it. The chip
+    # is grey rather than accent-tinted (the accent means "selected"), so its
+    # own contrast is the one thing that stops it disappearing into the panel.
+    chip_bg = composite(white, backgrounds["panelBackground"], 0.10)
+    rows.append(("textPrimary on SlateChip (white@10% over panelBackground)",
+                  contrast(colors["textPrimary"], chip_bg), AA_NORMAL))
+    # The capsule's own edge against the panel is 1.37:1 and is deliberately not
+    # tested at WCAG 1.4.11's 3:1. That rule covers a boundary you need in order
+    # to *identify* a component; a tag is identified by the word inside it, which
+    # is the pair above. The capsule groups the word with its ✕ and separates one
+    # tag from the next — spacing would do as much — and a fill light enough to
+    # reach 3:1 here would be a row of pale pills shouting louder than the
+    # values around them. The old accent-tinted chip did not reach 3:1 either.
+
     # Label swatches as non-text graphical dots (sidebar icon, grid badge) — 3:1, not 4.5:1.
     for sname in ("red", "yellow", "green", "blue", "purple"):
         for bname in ("panelBackground", "contentBackground"):

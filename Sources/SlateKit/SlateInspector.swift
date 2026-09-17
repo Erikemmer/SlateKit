@@ -108,8 +108,18 @@ public struct SlateStarRating: View {
                 .help(Self.starHelp(star))
             }
             Spacer()
-            Text(rating == 0 ? "Unrated" : "\(rating)/5")
-                .font(.caption).monospacedDigit().foregroundStyle(Slate.textSecondary)
+            // Only when there is nothing to see. Five drawn stars already say
+            // "three of them are filled", and a "3/5" beside them is that same
+            // fact written a second time – the copy that makes a rating row
+            // read as a form field rather than as a picture. An *empty* rating
+            // is the one case with no picture of its own: five hollow stars
+            // mean "not rated" only to someone who has already learned that
+            // they do, so that case keeps its word.
+            if rating == 0 {
+                Text("Unrated")
+                    .font(.caption)
+                    .foregroundStyle(Slate.textSecondary)
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Rating"))

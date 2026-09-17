@@ -176,5 +176,13 @@ public struct SlateShortcutSheet: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Without this, VoiceOver falls back to its default position-based
+        // sort: two columns side by side read row by row across both of them,
+        // jumping from the left column's first group into the right column's
+        // first group before the left column has finished. Grouping each
+        // column into one accessibility container makes it read top to bottom
+        // through the whole left column, then the whole right one – matching
+        // what a sighted reader's eye does.
+        .accessibilityElement(children: .contain)
     }
 }

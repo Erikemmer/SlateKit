@@ -104,6 +104,7 @@ struct SlateEditableText: View {
 
     @State private var draft: String = ""
     @State private var hasAppeared = false
+    @State private var isHovered = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -116,6 +117,7 @@ struct SlateEditableText: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
             .background(background)
+            .onHover { isHovered = $0 }
             .onAppear {
                 // Not in `init`: a `@State` set there is discarded on the next
                 // body pass, which is the classic way a field comes up empty.
@@ -148,16 +150,29 @@ struct SlateEditableText: View {
         }
     }
 
-    /// Visible as a field only while it matters: focused, or holding something.
-    /// An inspector of eight outlined boxes reads as a form; Selector's reads as
-    /// a column of values that happen to be editable.
+    /// Visible as a field only while it matters: focused, or under the pointer.
+    ///
+    /// The first version filled every field faintly at all times, and the first
+    /// screenshot of the result showed why that is wrong: nine filled boxes in a
+    /// 280-point column read as a form to be completed, where Selector's
+    /// inspector reads as a column of values that happen to be editable. The
+    /// comment on this very function said so before the code did.
+    ///
+    /// Nothing at rest, a hint under the pointer, the accent when focused —
+    /// so a field is discoverable without the column announcing itself.
     private var background: some View {
         RoundedRectangle(cornerRadius: Slate.cornerRadius)
-            .fill(isFocused ? Color.white.opacity(0.10) : Color.white.opacity(0.04))
+            .fill(fill)
             .overlay {
                 RoundedRectangle(cornerRadius: Slate.cornerRadius)
                     .strokeBorder(isFocused ? Slate.accent.opacity(0.8) : Color.clear, lineWidth: 1)
             }
+    }
+
+    private var fill: Color {
+        if isFocused { return Color.white.opacity(0.10) }
+        if isHovered { return Color.white.opacity(0.05) }
+        return .clear
     }
 
     private func commit() {
@@ -182,6 +197,7 @@ public struct SlateTokenField: View {
     private let tokens: [String]
     private let placeholder: String
     private let completions: [String]
+    private let help: String
     private let onAdd: (String) -> Void
     private let onRemove: (String) -> Void
     private let onDraftChange: (String) -> Void
@@ -197,11 +213,17 @@ public struct SlateTokenField: View {
     ///   - focusRequest: a counter. Raising it puts the keyboard in this field,
     ///     which is how a key such as T reaches it. A counter and not a `Bool`
     ///     so pressing the key twice focuses twice.
+    ///   - help: shown for the *entry field only*. It is a parameter rather
+    ///     than something the host puts on the whole control with `.help()`,
+    ///     because that is what the host did and SwiftUI passed it down to every
+    ///     chip: each one claimed "⏎ adds, ⌫ removes the last one" in place of
+    ///     its own "Remove science fiction". Found in the accessibility tree.
     public init(
         tokens: [String],
         placeholder: String,
         completions: [String] = [],
         focusRequest: Int = 0,
+        help: String = "",
         onDraftChange: @escaping (String) -> Void = { _ in },
         onAdd: @escaping (String) -> Void,
         onRemove: @escaping (String) -> Void
@@ -210,6 +232,7 @@ public struct SlateTokenField: View {
         self.placeholder = placeholder
         self.completions = completions
         self.focusRequest = focusRequest
+        self.help = help
         self.onDraftChange = onDraftChange
         self.onAdd = onAdd
         self.onRemove = onRemove
@@ -257,6 +280,7 @@ public struct SlateTokenField: View {
             .onSubmit { add(draft) }
             .onChange(of: draft) { _, new in onDraftChange(new) }
             .onChange(of: focusRequest) { _, _ in isFocused = true }
+            .help(help)
             // Backspace in an empty field takes the last chip off, the way every
             // token field since Mail's address row has behaved.
             .onKeyPress(.delete) {

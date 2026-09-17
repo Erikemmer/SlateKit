@@ -7,6 +7,80 @@ Both apps bind this package by **tag**, never by path, so a change here reaches
 an app only when that app raises its pin. Which version each app is on is part
 of the app's own history, not of this file.
 
+## 0.3.1 — 2026-09-17
+
+**Raising a pin from 0.1.6 to 0.3.1 changes nothing about how an app looks.**
+0.3.0 did change it, in three places, and this release turns all three into
+options that default to the older look. Nothing here is a new feature; it is
+0.3.0 made safe to adopt.
+
+### The three appearance changes are options now
+
+A package two apps bind by tag has one obligation its own taste does not
+override: an app that raises its pin for one fix must not find a second thing
+redrawn on the way. `SlateChip` and `SlateStarRating` both existed at 0.1.6,
+which is where Selector sits, so both keep their 0.1.6 look unless asked.
+
+| what 0.3.0 changed | how to ask for it now | the default |
+|---|---|---|
+| chips grey instead of accent | `SlateChip(style: .neutral)` | `.accent`, the fill since 0.1.0 |
+| the ✕ fades in under the pointer | `SlateChip(removeButton: .onHover)` | `.always`, as since 0.1.0 |
+| no "3/5" beside the stars | `SlateStarRating(label: .unratedOnly)` | `.value`, as since 0.1.0 |
+
+`SlateTokenField` takes `chipStyle:` and `chipRemoveButton:` and hands them
+straight down, defaulting the way `SlateChip` itself does — a control that drew
+a quieter chip than the host draws beside it would be the same surprise one
+level further in. Shelf passes `.neutral` and `.onHover` at every call site and
+looks exactly as it did on 0.3.0.
+
+`Unrated` stays in both readings: zero is the one rating with no picture of its
+own, and five hollow stars mean "not rated" only to somebody who has already
+learned that they do.
+
+The placeholder colour from 0.3.0 is **not** in that table, and deliberately.
+`SlateEditableFields` arrived in 0.2.0, after 0.1.6, so no shipping app has ever
+seen those fields look any other way. There is nothing to be compatible with.
+
+`SlateChipStyle.fill`, `SlateChipRemoveButton.opacity` and
+`SlateStarRating.labelText` are the decisions lifted out of the view bodies, so
+a test can read a default that would otherwise be buried in a `ViewBuilder`.
+Seven tests state them. `Scripts/check-contrast.py` checks both chip fills, since
+both are now drawn at once by different apps: accent 6.91:1, neutral 8.63:1.
+
+### The package speaks German again
+
+0.3.0 removed the German localisation, reasoning that Shelf is English until its
+own Sprint 7 and nine German words would sit oddly in an English window. That
+was true about Shelf and beside the point about the package: **Selector ships
+German**, and removing these strings does not spare Selector a mixed window — it
+puts nine English words into its German one.
+
+A package that two apps bind at different versions is precisely the thing that
+lets them be at different points. `Resources/Localizable.xcstrings`, the
+`resources:` clause and the eight `String(localized:)` call sites are back, all
+nine keys with them.
+
+`Unrated` is now **"Ohne Bewertung"** rather than 0.1.5's "Unbewertet":
+"Unbewertet" reads as a verdict on the book, "Ohne Bewertung" states what is
+missing, which is what an empty field is saying.
+
+Three tests hold it there, each watched failing before it was kept: every key
+has a German unit in state `translated`; every plain-literal `String(localized:)`
+in the sources is a key the catalogue knows; and the four keys the compiler
+builds out of an interpolation are spelled out, because renaming one of those
+still compiles and falls back to English without a word.
+
+The catalogue is read as a *file*, not through `Bundle.module` — a missing
+translation still builds into a valid bundle and falls back at runtime silently,
+so the bundle is the one place that cannot answer the question.
+
+### Breaking
+
+Nothing. Every initialiser gained parameters with defaults, and a call site
+written against 0.1.6, 0.2.1 or 0.3.0 compiles unchanged. A call site on 0.3.0
+that *wants* 0.3.0's look now has to say so — that is the one thing to check
+when raising a pin from exactly 0.3.0, and only Shelf is on it.
+
 ## 0.3.0 — 2026-09-17
 
 Four corrections, all of them to things the package drew louder or more

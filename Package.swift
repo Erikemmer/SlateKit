@@ -17,7 +17,6 @@ let package = Package(
         .target(
             name: "SlateKit",
             path: "Sources/SlateKit",
-            resources: [.process("Resources")],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(

@@ -108,23 +108,20 @@ public struct SlateStarRating: View {
                 .help(Self.starHelp(star))
             }
             Spacer()
-            Text(
-                rating == 0
-                    ? String(localized: "Unrated", bundle: .module) : String(localized: "\(rating)/5", bundle: .module)
-            )
-            .font(.caption).monospacedDigit().foregroundStyle(Slate.textSecondary)
+            Text(rating == 0 ? "Unrated" : "\(rating)/5")
+                .font(.caption).monospacedDigit().foregroundStyle(Slate.textSecondary)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(String(localized: "Rating", bundle: .module)))
-        .accessibilityValue(Text(String(localized: "\(rating) of 5", bundle: .module)))
+        .accessibilityLabel(Text("Rating"))
+        .accessibilityValue(Text("\(rating) of 5"))
     }
 
     /// "1 star (1)" / "3 stars (3)" – the full word per count, since German's
     /// plural of "Stern" ("Sterne") is not the singular plus an appended "s".
     private static func starHelp(_ star: Int) -> String {
         star == 1
-            ? String(localized: "1 star (1)", bundle: .module)
-            : String(localized: "\(star) stars (\(star))", bundle: .module)
+            ? "1 star (1)"
+            : "\(star) stars (\(star))"
     }
 }
 
@@ -146,8 +143,8 @@ public struct SlateChip: View {
                 Button(action: onRemove) { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.plain)
                     .focusable()
-                    .help(String(localized: "Remove", bundle: .module))
-                    .accessibilityLabel(String(localized: "Remove \(text)", bundle: .module))
+                    .help("Remove")
+                    .accessibilityLabel("Remove \(text)")
             }
         }
         .font(.caption)

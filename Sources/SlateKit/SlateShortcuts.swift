@@ -43,14 +43,29 @@ public struct SlateShortcutLine: View {
         self.shortcuts = shortcuts
     }
 
+    /// Wrapping, with each hint a unit that does not break inside itself.
+    ///
+    /// It was one `HStack`, and with five hints in a 590-point column SwiftUI
+    /// did what an `HStack` does when it runs out of room: it squeezed the
+    /// *labels*. "Open Library…" became two lines, "Move through the grid"
+    /// three, and a row meant to be read at a glance came out ragged. Found on
+    /// the first screenshot ever taken of Shelf's welcome screen.
+    ///
+    /// A flow layout wraps between hints instead of inside them. The separator
+    /// travels with its own hint rather than sitting between two, so a line
+    /// break never leaves a dot hanging at the start of a row.
     public var body: some View {
-        HStack(spacing: 8) {
+        SlateFlowLayout(spacing: 10) {
             ForEach(Array(shortcuts.enumerated()), id: \.element.id) { index, shortcut in
-                if index > 0 {
-                    Text("·").foregroundStyle(Slate.separator)
+                HStack(spacing: 5) {
+                    if index > 0 {
+                        Text("·").foregroundStyle(Slate.separator)
+                    }
+                    Text(shortcut.keys).monospaced().foregroundStyle(Slate.textPrimary)
+                    Text(shortcut.action).foregroundStyle(Slate.textSecondary)
                 }
-                Text(shortcut.keys).monospaced().foregroundStyle(Slate.textPrimary)
-                Text(shortcut.action).foregroundStyle(Slate.textSecondary)
+                .lineLimit(1)
+                .fixedSize()
             }
         }
         .font(.caption)

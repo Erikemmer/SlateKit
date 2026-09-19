@@ -7,6 +7,78 @@ Both apps bind this package by **tag**, never by path, so a change here reaches
 an app only when that app raises its pin. Which version each app is on is part
 of the app's own history, not of this file.
 
+## 0.4.0 — 2026-09-19
+
+**Everything a keyboard or VoiceOver could not reach.** Nothing here is an
+appearance change and nothing is behind an option: a control that announced
+nothing now announces itself, and a control that drew no focus ring draws one
+while it is focused. At rest every one of them looks exactly as it did on
+0.3.1, which is what makes this safe to adopt without looking at a screenshot.
+
+### Added — a sidebar row is a button, and says so
+
+`SlateSidebarRow` has had a tap gesture, `.focusable` and ⏎/␣ handling since
+0.2.0. What it never had was a **role**: the accessibility tree showed an
+`AXImage` and two `AXStaticText` per row, no `AXButton`, no action. VoiceOver
+read the words and offered nothing to do with them, so a whole sidebar — every
+collection, every tag, every author — was unreachable to anyone not using a
+mouse. The combined element now carries `.isButton` and a default action
+(`AXPress`, what ⌃⌥␣ sends) whenever the row has an action at all.
+
+### Added — a grid cell is one element with a name
+
+A cell arrived as its picture, its caption and one static text per badge: four
+separate stops with no relation to each other, read in **layout** order, which
+put the picture's own SF Symbol name ("book.closed") and the badges before the
+title. A grid of 5 000 books was 15 000 stops.
+
+`SlateGridCell` is now a single element with `.isButton`, `.isSelected` when it
+is, and a label. The new `label:` parameter is where a host says what the badges
+mean — "Dune, Frank Herbert, read, DRM" — and it **defaults to the caption**, so
+a host that passes nothing gets what the cell always said. `spokenLabel` is the
+decision, lifted out of the body so a test can read it.
+
+### Added — a name for a field that has its name beside it
+
+`SlateEditableRow` draws "Publisher" on the left and the field on the right, and
+the field's own accessibility name was its *placeholder*. A filled row announced
+a value with nothing saying what it was the value of; an empty one announced the
+prompt twice. The row hands its name down now (`SlateEditableText` takes an
+`accessibilityLabel`).
+
+### Added — a rating that can be set, not only read
+
+`SlateStarRating` hides its five buttons behind `children: .ignore`, which is
+right — five stops all called "3 stars (3)" is not how a rating reads — but it
+left the control readable and **not settable**: nothing in the tree to press.
+It takes an adjustable action now, the one VoiceOver already has keys for
+(⌃⌥→, then ↑ and ↓). `SlateStarRating.adjusted(_:_:)` is the step, stopping at
+five and at nought, with a test for both ends.
+
+### Added — `SlateFocusRing`, and every hand-drawn control draws it
+
+`.buttonStyle(.plain)` is how this package gets buttons that look like the rest
+of it, and it is also how a button stops drawing a focus ring. A keyboard-only
+user could Tab through an inspector and never see where they had landed. The
+ring was drawn inline in `SlateSidebarRow` and nowhere else; it is now one
+shape, `.slateFocusRing(_:)` and `.slateCapsuleFocusRing(_:)`, drawn by the
+sidebar row, the five stars, a chip's ✕, a suggestion chip and a recent-library
+row. `strokeBorder` rather than `stroke`, so it does not spill a point over the
+neighbour above.
+
+### Added — two decorative symbols stop announcing themselves
+
+The folder in `SlateRecentRow` and the arrow in `SlateDropZone` are hidden from
+the tree. The words beside them say the same thing; their SF Symbol names
+("questionmark.folder", "arrow.down.doc") said it in none.
+
+### Nothing was taken away
+
+`SlateGridCell.init` gained a parameter with a default, which is the only API
+change, and it is source-compatible. Selector's pin is 0.1.6 and Shelf's is
+0.3.1; raising either to 0.4.0 changes what the window *says* and not what it
+*looks like*.
+
 ## 0.3.1 — 2026-09-17
 
 **Raising a pin from 0.1.6 to 0.3.1 changes nothing about how an app looks.**

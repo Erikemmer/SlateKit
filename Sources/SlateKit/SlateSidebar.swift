@@ -98,6 +98,23 @@ public struct SlateSidebarRow<Title: View, Accessory: View>: View {
             // no longer be individually activatable by VoiceOver).
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(isActive ? .isSelected : [])
+            // A row that does something is a **button**, and says so.
+            //
+            // Until 0.4.0 it did not. The accessibility tree showed an image
+            // and two pieces of static text per row, with no role and no
+            // action on any of them, so VoiceOver announced the words and
+            // offered nothing to do with them: a whole sidebar — every smart
+            // collection, every tag, every author — was unreachable to anyone
+            // not using a mouse. The tap gesture and the ⏎/␣ handling below
+            // were already there; what was missing was the *announcement* that
+            // they exist.
+            //
+            // The trait and the action go on the combined element rather than
+            // on the row, because that element is the one thing in the tree a
+            // reader lands on. `accessibilityAction` with no argument is the
+            // default action — AXPress, what VoiceOver's ⌃⌥␣ sends.
+            .accessibilityAddTraits(action != nil ? .isButton : [])
+            .accessibilityAction { action?(false) }
             accessory
         }
         .font(.callout)
@@ -106,14 +123,11 @@ public struct SlateSidebarRow<Title: View, Accessory: View>: View {
         .padding(.top, topPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(isActive ? Slate.accent.opacity(0.18) : Color.clear)
-        .overlay {
-            // A plain custom view draws no focus ring of its own, unlike a
-            // real control – without this, a keyboard-only user could Tab
-            // onto a row and never see where they landed.
-            if isFocused {
-                RoundedRectangle(cornerRadius: Slate.cornerRadius).stroke(Slate.accent, lineWidth: 2)
-            }
-        }
+        // A plain custom view draws no focus ring of its own, unlike a real
+        // control – without this, a keyboard-only user could Tab onto a row and
+        // never see where they landed. The shape is `SlateFocusRing`'s since
+        // 0.4.0, so every hand-drawn control in this package draws the same one.
+        .slateFocusRing(isFocused)
         .contentShape(Rectangle())
         .onTapGesture { action?(NSEvent.modifierFlags.contains(.command)) }
         .focusable(action != nil)

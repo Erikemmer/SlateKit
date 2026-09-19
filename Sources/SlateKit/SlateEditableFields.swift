@@ -49,7 +49,15 @@ public struct SlateEditableRow: View {
                 .truncationMode(.middle)
             Spacer(minLength: 4)
             SlateEditableText(
-                value: value, placeholder: placeholder, alignment: .trailing, onCommit: onCommit)
+                value: value, placeholder: placeholder, alignment: .trailing,
+                // The name on the left is the field's name, and before 0.4.0
+                // only the sighted reader got to know that. The field's own
+                // accessibility name was its *placeholder* ("Add publisher…"),
+                // so a filled Publisher row announced a value with nothing
+                // saying what it was the value of — and an empty one announced
+                // the prompt twice.
+                accessibilityLabel: name,
+                onCommit: onCommit)
         }
         .font(.callout)
         .help(help ?? name)
@@ -100,6 +108,10 @@ struct SlateEditableText: View {
     var isMultiline: Bool = false
     var lineLimit: Int = 6
     var font: Font = .callout
+    /// What the field is called, where the name is drawn beside it rather than
+    /// inside it. Empty leaves the placeholder as the name, which is what a
+    /// field with no label beside it wants.
+    var accessibilityLabel: String = ""
     let onCommit: (String) -> Void
 
     @State private var draft: String = ""
@@ -137,6 +149,8 @@ struct SlateEditableText: View {
                 if wasFocused, !nowFocused { commit() }
             }
             .onExitCommand { revert() }
+            .accessibilityLabel(
+                accessibilityLabel.isEmpty ? Text(placeholder) : Text(accessibilityLabel))
     }
 
     @ViewBuilder

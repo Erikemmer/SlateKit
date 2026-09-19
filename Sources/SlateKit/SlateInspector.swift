@@ -98,6 +98,7 @@ public struct SlateStarRating: View {
     private let rating: Int
     let label: SlateStarLabel
     private let onChange: (Int) -> Void
+    @FocusState private var focusedStar: Int?
 
     /// - Parameters:
     ///   - label: what is written beside the stars. Defaults to the reading
@@ -127,6 +128,10 @@ public struct SlateStarRating: View {
                 // `.plain` opts a button out of the Tab order on macOS; without
                 // this a keyboard-only user cannot reach these stars at all.
                 .focusable()
+                .focused($focusedStar, equals: star)
+                // …and, having reached them, sees where they are. A plain
+                // button draws no ring of its own (0.4.0).
+                .slateFocusRing(focusedStar == star)
                 .help(Self.starHelp(star))
             }
             Spacer()
@@ -138,6 +143,30 @@ public struct SlateStarRating: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(String(localized: "Rating", bundle: .module)))
         .accessibilityValue(Text(String(localized: "\(rating) of 5", bundle: .module)))
+        // `children: .ignore` hides the five buttons, which is right — five
+        // stops all called "3 stars (3)" is not how a rating should read — but
+        // until 0.4.0 it left the control **readable and not settable**: the
+        // value was announced and there was nothing left in the tree to press.
+        // An adjustable action is the platform's answer to that, and it is the
+        // one VoiceOver already has keys for (⌃⌥→, then ↑ and ↓).
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: onChange(Self.adjusted(rating, .increment))
+            case .decrement: onChange(Self.adjusted(rating, .decrement))
+            @unknown default: break
+            }
+        }
+    }
+
+    /// One step up or down, stopping at the ends. Lifted out of the closure so
+    /// a test can check that it neither goes past five nor below nought — the
+    /// two cases a person holding ↑ finds within a second.
+    static func adjusted(_ rating: Int, _ direction: AccessibilityAdjustmentDirection) -> Int {
+        switch direction {
+        case .increment: return min(5, rating + 1)
+        case .decrement: return max(0, rating - 1)
+        @unknown default: return rating
+        }
     }
 
     /// What goes beside the stars, or `nil` for nothing at all.
@@ -254,6 +283,7 @@ public struct SlateChip: View {
                     .buttonStyle(.plain)
                     .focusable()
                     .focused($isRemoveFocused)
+                    .slateFocusRing(isRemoveFocused, cornerRadius: 8)
                     .help(String(localized: "Remove", bundle: .module))
                     .accessibilityLabel(String(localized: "Remove \(text)", bundle: .module))
                     .opacity(removeButton.opacity(isHovered: isHovered, isFocused: isRemoveFocused))
@@ -278,14 +308,18 @@ public struct SlateSuggestionChip: View {
         self.action = action
     }
 
+    @FocusState private var isFocused: Bool
+
     public var body: some View {
         Button(text, action: action)
             .buttonStyle(.plain)
             .focusable()
+            .focused($isFocused)
             .font(.caption)
             .padding(.horizontal, 7).padding(.vertical, 3)
             .background(Color.white.opacity(0.06), in: Capsule())
             .foregroundStyle(Slate.textSecondary)
+            .slateCapsuleFocusRing(isFocused)
     }
 }
 

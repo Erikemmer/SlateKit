@@ -116,6 +116,9 @@ public struct SlateDropZone: View {
             Image(systemName: symbol)
                 .font(.title2)
                 .foregroundStyle(isTargeted ? Slate.accent : Slate.textSecondary)
+                // Decorative: the title beside it says the same thing in words,
+                // and the symbol's own name ("arrow.down.doc") says it in none.
+                .accessibilityHidden(true)
             Text(title)
                 .font(.callout)
                 .foregroundStyle(isTargeted ? Slate.textPrimary : Slate.textSecondary)
@@ -186,10 +189,13 @@ public struct SlateRecentRow: View {
         self.action = action
     }
 
+    @FocusState private var isFocused: Bool
+
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: isReachable ? "folder" : "questionmark.folder")
+                    .accessibilityHidden(true)
                     .foregroundStyle(Slate.textSecondary)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
@@ -208,6 +214,8 @@ public struct SlateRecentRow: View {
         }
         .buttonStyle(.plain)
         .focusable()
+        .focused($isFocused)
+        .slateFocusRing(isFocused)
         .opacity(isReachable ? 1 : 0.4)
         .help(help)
     }

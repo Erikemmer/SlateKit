@@ -7,6 +7,24 @@ Both apps bind this package by **tag**, never by path, so a change here reaches
 an app only when that app raises its pin. Which version each app is on is part
 of the app's own history, not of this file.
 
+## 0.4.1 — 2026-09-19
+
+What 0.4.0 should have included: four more things the accessibility tree was
+not saying, all found by dumping the tree of a real window rather than by
+reading the source. No appearance change, nothing behind an option.
+
+- **A section heading says it is one.** `SlateSidebarSection` and
+  `SlateInspectorSection` carry `.isHeader`, so VoiceOver's heading navigation
+  moves from LIBRARY to SHELVES to TAGS instead of walking ninety-seven author
+  rows to reach FORMATS.
+- **A token field has a name.** `SlateTokenField` draws its placeholder through
+  `prompt:`, and the title it also passes does not reach the tree that way: the
+  field arrived with a help string and nothing else. It is labelled with its
+  placeholder now — "Add tag… (T)".
+- **An editable row stops saying its name twice.** 0.4.0 gave the field the
+  row's name; the name drawn beside it is hidden now, so a reader hears
+  "Publisher, Gollancz" rather than "Publisher" and then "Publisher, Gollancz".
+
 ## 0.4.0 — 2026-09-19
 
 **Everything a keyboard or VoiceOver could not reach.** Nothing here is an

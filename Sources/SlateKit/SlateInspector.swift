@@ -16,6 +16,10 @@ public struct SlateInspectorSection<Content: View>: View {
             Text(title.uppercased())
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Slate.textSecondary)
+                // The same reason as the sidebar's: an inspector is twelve
+                // blocks long, and heading navigation is how a reader gets
+                // from the cover to Formats without passing through all of it.
+                .accessibilityAddTraits(.isHeader)
             content
         }
     }

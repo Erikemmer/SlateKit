@@ -47,6 +47,10 @@ public struct SlateEditableRow: View {
                 .foregroundStyle(Slate.textSecondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
+                // Hidden since 0.4.1, because the field beside it now carries
+                // the same word as its own name: a reader was told "Publisher"
+                // and then "Publisher, Gollancz, text field", one stop apart.
+                .accessibilityHidden(true)
             Spacer(minLength: 4)
             SlateEditableText(
                 value: value, placeholder: placeholder, alignment: .trailing,
@@ -304,6 +308,10 @@ public struct SlateTokenField: View {
                     }
             }
             .onSubmit { add(draft) }
+            // The prompt is drawn by `prompt:` rather than by the title, and
+            // the title does not reach the accessibility tree through it — the
+            // field arrived with a help string and no name at all.
+            .accessibilityLabel(Text(placeholder))
             .onChange(of: draft) { _, new in onDraftChange(new) }
             .onChange(of: focusRequest) { _, _ in isFocused = true }
             .help(help)

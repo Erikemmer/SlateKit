@@ -16,6 +16,10 @@ public struct SlateSidebarSection: View {
             .padding(.horizontal, 12)
             .padding(.top, 12)
             .padding(.bottom, 4)
+            // It *is* a heading, and saying so is what lets VoiceOver jump
+            // from one section to the next instead of walking ninety-seven
+            // author rows to reach Formats.
+            .accessibilityAddTraits(.isHeader)
             // Every row spans the column. Without this the widest row decides
             // how wide the content is, and anything wider than the sidebar gets
             // clipped on both sides.

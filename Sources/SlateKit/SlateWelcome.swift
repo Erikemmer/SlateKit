@@ -171,14 +171,27 @@ public struct SlateRecentRow: View {
     private let path: String
     private let isReachable: Bool
     private let help: String
+    private let label: String?
+    private let onDelete: (() -> Void)?
     private let action: () -> Void
 
+    /// - Parameters:
+    ///   - label: what the whole row is *called*, for a reader who cannot see
+    ///     the window — falls back to `name` alone, since the raw `path`
+    ///     read letter by letter is not what a host wants spoken. Supply one
+    ///     that says what the visible detail means (a photo count, when it
+    ///     was last opened) in words.
+    ///   - onDelete: forgets this entry — called from the Delete key once
+    ///     focused, with no confirmation of its own; a host that wants one
+    ///     asks before calling this.
     public init(
         name: String,
         detail: String? = nil,
         path: String,
         isReachable: Bool = true,
         help: String = "",
+        label: String? = nil,
+        onDelete: (() -> Void)? = nil,
         action: @escaping () -> Void
     ) {
         self.name = name
@@ -186,10 +199,14 @@ public struct SlateRecentRow: View {
         self.path = path
         self.isReachable = isReachable
         self.help = help
+        self.label = label
+        self.onDelete = onDelete
         self.action = action
     }
 
     @FocusState private var isFocused: Bool
+
+    var spokenLabel: String { label ?? name }
 
     public var body: some View {
         Button(action: action) {
@@ -218,5 +235,26 @@ public struct SlateRecentRow: View {
         .slateFocusRing(isFocused)
         .opacity(isReachable ? 1 : 0.4)
         .help(help)
+        // A real Button here still does not answer to ⏎ once it is reached
+        // by Tab in this package's hosting apps — the same gap 0.4.0 closed
+        // for `SlateSidebarRow`, missed here. ␣ needs the same explicit
+        // handling: a host that binds it to its own shortcut (a loupe zoom)
+        // would otherwise fire that instead of opening the focused row.
+        // Both are consumed so neither reaches a host shortcut afterwards.
+        .onKeyPress(keys: [.return, .space]) { _ in
+            action()
+            return .handled
+        }
+        .onKeyPress(.delete) {
+            guard let onDelete else { return .ignored }
+            onDelete()
+            return .handled
+        }
+        // Replaces the tree a reader who cannot see would otherwise get by
+        // default — the path spoken letter by letter, after the name and
+        // detail. `path` stays on screen for sighted use; `spokenLabel` is
+        // what VoiceOver says instead.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenLabel)
     }
 }

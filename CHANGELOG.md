@@ -7,6 +7,27 @@ Both apps bind this package by **tag**, never by path, so a change here reaches
 an app only when that app raises its pin. Which version each app is on is part
 of the app's own history, not of this file.
 
+## 0.5.0 — 2026-09-22
+
+**A recent-session row could be reached by Tab since 0.4.0 (it draws
+`slateFocusRing` and is a real `Button`) but not opened from the keyboard —
+0.4.0 gave `SlateSidebarRow` explicit ⏎/␣ handling and missed this row, the
+same gap 0.4.1 was meant to close. Found live: reaching it by Tab and
+pressing ⏎ did nothing; a `Button`'s own key handling cannot be assumed to
+fire in every host, which is exactly why `SlateSidebarRow` needed its own
+`.onKeyPress` rather than relying on it.**
+
+- **`SlateRecentRow` answers to ⏎ and ␣ explicitly**, the same fix
+  `SlateSidebarRow` got in 0.4.0, and both are consumed so a host's own ␣
+  shortcut (a loupe zoom, say) does not also fire while the row is focused.
+- **A new `onDelete` parameter** removes the entry on the Delete key, with no
+  confirmation of its own — a host that wants one asks before calling it, the
+  same division `SlateSidebarRow`'s own delete accessory already uses.
+- **A new `label` parameter** replaces the raw `path` VoiceOver would
+  otherwise read letter by letter, the same fallback shape as
+  `SlateGridCell`'s: falls back to `name` alone when a host does not supply
+  one. No appearance change; both parameters default to their old absence.
+
 ## 0.4.1 — 2026-09-19
 
 What 0.4.0 should have included: four more things the accessibility tree was

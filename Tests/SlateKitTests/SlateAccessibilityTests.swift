@@ -41,4 +41,18 @@ struct SlateAccessibilityTests {
         #expect(SlateStarRating.adjusted(5, .increment) == 5)
         #expect(SlateStarRating.adjusted(0, .decrement) == 0)
     }
+
+    @Test("a recent-session row nobody labelled is called by its name, not its path")
+    func recentRowFallsBackToItsName() {
+        let row = SlateRecentRow(name: "2026-09-14 Hochzeit Anna", path: "/Volumes/Photos/Anna", action: {})
+        #expect(row.spokenLabel == "2026-09-14 Hochzeit Anna")
+    }
+
+    @Test("a recent-session row that was given a label says that, count and date included")
+    func recentRowUsesTheLabelItWasGiven() {
+        let row = SlateRecentRow(
+            name: "Anna", path: "/Volumes/Photos/Anna",
+            label: "Anna, 340 photos, last opened 2026-09-14", action: {})
+        #expect(row.spokenLabel == "Anna, 340 photos, last opened 2026-09-14")
+    }
 }

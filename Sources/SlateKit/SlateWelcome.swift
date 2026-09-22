@@ -245,11 +245,13 @@ public struct SlateRecentRow: View {
             action()
             return .handled
         }
-        .onKeyPress(.delete) {
-            guard let onDelete else { return .ignored }
-            onDelete()
-            return .handled
-        }
+        // Not `.onKeyPress(.delete)`: the Delete key's keyDown is claimed by
+        // AppKit's own key-binding machinery (`deleteBackward:` and friends)
+        // before SwiftUI's onKeyPress ever sees it — confirmed live, ⏎ and
+        // ␣ above are unaffected because they are not text-editing
+        // selectors. `onDeleteCommand` is the dedicated hook for exactly
+        // this key on macOS.
+        .onDeleteCommand { onDelete?() }
         // Replaces the tree a reader who cannot see would otherwise get by
         // default — the path spoken letter by letter, after the name and
         // detail. `path` stays on screen for sighted use; `spokenLabel` is

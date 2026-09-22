@@ -7,6 +7,18 @@ Both apps bind this package by **tag**, never by path, so a change here reaches
 an app only when that app raises its pin. Which version each app is on is part
 of the app's own history, not of this file.
 
+## 0.5.1 — 2026-09-22
+
+**What 0.5.0's `onDelete` should have used.** Live-tested against a real
+window (not just the unit tests, which cannot exercise a key event at all):
+⏎ and ␣ open the row exactly as 0.5.0 intended, but the Delete key did
+nothing — `.onKeyPress(.delete)` never fires on macOS, because the key's
+`keyDown` is claimed by AppKit's own key-binding machinery
+(`deleteBackward:` and its relatives) before SwiftUI's `onKeyPress` sees
+it. ⏎/␣ are unaffected because they are not text-editing selectors.
+Switched to `.onDeleteCommand`, the dedicated SwiftUI hook for exactly this
+key on macOS.
+
 ## 0.5.0 — 2026-09-22
 
 **A recent-session row could be reached by Tab since 0.4.0 (it draws
